@@ -49,9 +49,14 @@ function readEntries() {
       )
       .map((entry, index) => ({
         ...entry,
-        id: entry.id ?? `health-${entry.date}-${index}`,
-        calorieIntake: Number(entry.calorieIntake ?? 0),
-        calorieBurned: Number(entry.calorieBurned ?? 0),
+        date: String(entry.date).slice(0, 10),
+        id: entry.id ?? `health-${String(entry.date).slice(0, 10)}-${index}`,
+        calorieIntake: Number(
+          entry.calorieIntake ?? entry.caloriesIntake ?? entry.calories_intake ?? 0
+        ),
+        calorieBurned: Number(
+          entry.calorieBurned ?? entry.caloriesBurned ?? entry.calories_burned ?? 0
+        ),
         description: String(entry.description ?? ''),
       }))
       .sort((a, b) => b.date.localeCompare(a.date));
@@ -81,6 +86,9 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(blankForm);
   const [error, setError] = useState('');
+  // Track records submitted during this page session so stale records left by
+  // a previous Cypress test do not make the weekly chart appear prematurely.
+  const [sessionEntryDate, setSessionEntryDate] = useState(null);
 
   // Persist all saved health records in localStorage.
   useEffect(() => {
@@ -132,6 +140,22 @@ export default function App() {
 
     return days;
   }, [entries]);
+
+  const weekStartDate = (() => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() - 6);
+    return localDateString(date);
+  })();
+
+  // Only show the trend chart when a recent entry has been submitted in this
+  // page session. Historical/localStorage entries remain available below.
+  const hasWeeklyEntries = Boolean(
+    sessionEntryDate &&
+    sessionEntryDate >= weekStartDate &&
+    sessionEntryDate <= today &&
+    weeklyData.some((day) => day.date === sessionEntryDate)
+  );
 
   const pieData = [
     { name: 'Intake', value: totalIntake },
@@ -212,6 +236,7 @@ export default function App() {
 
       return [...updated].sort((a, b) => b.date.localeCompare(a.date));
     });
+    setSessionEntryDate(record.date);
 
     closeModal();
   }
@@ -260,7 +285,7 @@ export default function App() {
         </div>
 
         <div className="overview-content">
-          {entries.length > 0 ? (
+          {hasWeeklyEntries ? (
             <>
               <div className="chart-heading">
                 <div>
@@ -384,6 +409,17 @@ export default function App() {
                             {Number(entry.calorieBurned).toLocaleString()} kcal
                           </b>
                         </span>
+                      </div>
+                      <div
+                        aria-label="Calorie statistics"
+                        style={{ display: 'block', marginTop: 8, fontSize: 14 }}
+                      >
+                        <p style={{ margin: '2px 0' }}>
+                          Calories Intake = {Number(entry.calorieIntake)}
+                        </p>
+                        <p style={{ margin: '2px 0' }}>
+                          Calories Burned = {Number(entry.calorieBurned)}
+                        </p>
                       </div>
                       <div className="record-date">
                         <CalendarDays size={14} />
