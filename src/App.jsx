@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell
 } from 'recharts';
-import { Activity, CalendarDays, Flame, Pencil, Plus, Trash2, X, Utensils, Footprints } from 'lucide-react';
+import { Activity, CalendarDays, Flame, Pencil, Trash2, X, Utensils, Footprints } from 'lucide-react';
 
 const STORAGE_KEY = 'healthAndFitness';
 const COLORS = ['#bd00ff', '#ff9800'];
@@ -162,7 +162,7 @@ export default function App() {
           <h2>Update Today's Data</h2>
           <p>Keep track of meals, movement, and daily calorie goals.</p>
           <button className="button button-green add-button" onClick={openAdd}>
-            <Plus size={17} /> Add data
+            + Add data
           </button>
           {todayEntry && <span className="today-status"><span /> Today's data recorded</span>}
         </div>
